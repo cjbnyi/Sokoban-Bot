@@ -47,6 +47,11 @@ public class SokoState {
         return heuristic;
     }
 
+    /**
+     * A* implementation
+     * f(n) = g(n) + h(n)
+     * @return
+     */
     public int getComparator() {
         return cost + heuristic;
     }

@@ -7,6 +7,9 @@ public class SokoBot {
   char mapData[][];
   int width, height;
 
+  /*
+        Extracts goal and wall coordinates from char mapData[][]
+   */
   public void initMap(char[][] mapData) {
     int i, j;
 
@@ -15,13 +18,16 @@ public class SokoBot {
         if (mapData[i][j] == '#') {
           wallList.add(new int[] {i, j});
         }
-        if (mapData[i][j] == '.' || mapData[i][j] == '*') {
+        else if (mapData[i][j] == '.' || mapData[i][j] == '*') { // Why are we checking for *?
           goalList.add(new int[] {i, j});
         }
       }
     }
   }
 
+  /*
+        Computes the Manhattan distance of a box (given its coordinates) and its closest goal.
+   */
   public int getManhattan(int[] source) {
     ArrayList<Integer> distances = new ArrayList<>();
     for (int[] goal : this.goalList) {
@@ -31,6 +37,9 @@ public class SokoBot {
     return Collections.min(distances);
   }
 
+  /*
+        Computes the sum of each box and its Manhattan distance to the closest goal.
+   */
   public int getHeuristic(char itemsData[][]) {
     int[][] boxes = new int[goalList.size()][2];  
     int i, j, count = 0;
@@ -55,10 +64,18 @@ public class SokoBot {
     return totalHeuristic;
   }
 
+  /*
+        Determines whether row x, column y has an item
+   */
   public boolean isItem(int x, int y, char[][] itemsData, char[][] mapData) {
     return itemsData[x][y] == '$' || mapData[x][y] == '#';
   }
 
+  /*
+        Determines whether a box
+        NOTE: This method is unnecessary, as we can code a general preprocessing method that determines
+              all possible 'dead' positions and not just specific corner cases.
+   */
   public boolean isBlocked(int x, int y, char[][] itemsData, char[][] mapData) {
     return (isItem(x, y + 1, itemsData, mapData) && isItem(x + 1, y, itemsData, mapData)) ||
            (isItem(x, y + 1, itemsData, mapData) && isItem(x - 1, y, itemsData, mapData)) ||
@@ -66,8 +83,11 @@ public class SokoBot {
            (isItem(x, y - 1, itemsData, mapData) && isItem(x - 1, y, itemsData, mapData));
   }
 
+  /*
+        Simulates a valid player move into an empty space
+   */
   public void moveOne(int playerPosition[], char[][] itemsData, char action) {
-    int x = playerPosition[0];
+    int x = playerPosition[0]; // same comments as naming in checkState
     int y = playerPosition[1];
 
     switch (action) {
@@ -94,6 +114,9 @@ public class SokoBot {
     }
   }
 
+  /*
+        Simulates a valid player move into a pushable box
+   */
   public void moveTwo(int playerPosition[], char[][] itemsData, char action) {
     int x = playerPosition[0];
     int y = playerPosition[1];
@@ -126,6 +149,9 @@ public class SokoBot {
     }
   }
 
+  /*
+        Unnecessary, same comments as isBlocked()
+   */
   public boolean blockedBox(char[][] itemsData, char[][] mapData) {
     int i, j;
 
@@ -140,9 +166,17 @@ public class SokoBot {
     return false;
   }
 
+  /*
+        Checks whether an action can be performed given a game state
+
+        For each move, we have the following possible cases:
+        Case 1: Player's move sends them out of bounds
+        Case 2: Player's move sends them to an empty space
+        Case 3: Player's move runs into a crate
+   */
   public int checkState(int playerPosition[], char[][] itemsData, char action) {
-    int x = playerPosition[0];
-    int y = playerPosition[1];
+    int x = playerPosition[0]; // can be confusing since x is associated with the horizontal axis
+    int y = playerPosition[1]; // better labeled row and column, correspondingly
     
     switch (action) {
         case 'r':
@@ -161,11 +195,12 @@ public class SokoBot {
                 
             }
             break;
+
         case 'l':
 
-        if (y <= 0 || mapData[x][y - 1] == '#') {
-          return -1;
-        }
+            if (y <= 0 || mapData[x][y - 1] == '#') {
+              return -1;
+            }
 
             if (y > 0 && itemsData[x][y - 1] == ' ') {
                 moveOne(playerPosition, itemsData, action);
@@ -177,11 +212,12 @@ public class SokoBot {
                 return getHeuristic(itemsData);
             }
             break;
+
         case 'd':
 
-        if (x >= this.height - 1 || mapData[x + 1][y] == '#') {
-          return -1;
-        }
+            if (x >= this.height - 1 || mapData[x + 1][y] == '#') {
+              return -1;
+            }
 
             if (x < height - 1 && itemsData[x + 1][y] == ' ') {
                 moveOne(playerPosition, itemsData, action);
@@ -194,6 +230,7 @@ public class SokoBot {
             
             }
             break;
+
         case 'u':
 
         if (x <= 0 || mapData[x - 1][y] == '#') {
@@ -216,6 +253,9 @@ public class SokoBot {
     return -1; // Invalid move
 }
 
+/*
+    Checks whether a SokoState can be added given the current explored states
+ */
 public boolean canAdd(SokoState sokoState, HashMap<String, Integer> explored) {
     String stateHash = getStateHash(sokoState.getItemsData());
     
@@ -223,10 +263,15 @@ public boolean canAdd(SokoState sokoState, HashMap<String, Integer> explored) {
         return false;
     }
 
+    // can also be confusing because method just checks if it can be added but it gets added too
+    // can be transferred to enqueueState()
     explored.put(stateHash, sokoState.getComparator());
     return true;
 }
 
+/*
+    Converts char[][] itemsData (information about a state) into a String for the HashMap of explored states
+ */
 public String getStateHash(char[][] itemsData) {
     StringBuilder hashBuilder = new StringBuilder();
     for (int i = 0; i < height; i++) {
@@ -235,8 +280,11 @@ public String getStateHash(char[][] itemsData) {
     return hashBuilder.toString();
 }
 
+/*
+    Checks all possible actions from a given SokoState and adds to PQueue pq if valid, given HashMap explored
+ */
 public void enqueueState(PriorityQueue<SokoState> pq, HashMap<String, Integer> explored, SokoState sokoState) {
-    char[] actions = {'r', 'd', 'l', 'u'}; 
+    char[] actions = {'r', 'd', 'l', 'u'}; // could be elevated to class level
     int heuristic;
     int tempPosition[];
     SokoState newState;
@@ -256,6 +304,9 @@ public void enqueueState(PriorityQueue<SokoState> pq, HashMap<String, Integer> e
     }
 }
 
+/*
+    Creates a deep copy of a char[][] itemsData
+ */
 public char[][] deepCopyItems(char[][] itemsData) {
     char[][] copy = new char[height][width];
     for (int i = 0; i < height; i++) {
@@ -264,6 +315,9 @@ public char[][] deepCopyItems(char[][] itemsData) {
     return copy;
 }
 
+/*
+    Gets the String representation of the set of moves of a solution
+ */
 public String getPath(StringBuilder finalMoves, SokoState currState) {
   Stack<Character> path = new Stack<>();
   SokoState tempState = currState;
@@ -281,9 +335,12 @@ public String getPath(StringBuilder finalMoves, SokoState currState) {
   return finalMoves.toString();
 }
 
-
+/*
+    Main method that solves a Sokoban puzzle given its width, height, and data about its states
+ */
 public String solveSokobanPuzzle(int width, int height, char[][] mapData, char[][] itemsData) {
     StringBuilder finalMoves = new StringBuilder();
+    // needed to order states in a PQueue
     Comparator<SokoState> comparator = Comparator.comparingInt(SokoState::getComparator);
     PriorityQueue<SokoState> pq = new PriorityQueue<>(comparator);
     HashMap<String, Integer> exploredStates = new HashMap<>();
@@ -300,7 +357,7 @@ public String solveSokobanPuzzle(int width, int height, char[][] mapData, char[]
 
     while (heuristic > 0 && !pq.isEmpty()) {
         currState = pq.poll();
-        enqueueState(pq, exploredStates, currState);
+        enqueueState(pq, exploredStates, currState); // NOTE: Name can be misleading since this is where you also add succeeding states.
         
         heuristic = getHeuristic(currState.getItemsData()); 
     }
