@@ -70,7 +70,7 @@ public class SokoBot {
         }
 
         // Summing up the minimum Manhattan distances
-        for (i = 0; i < boxes.length; i++) {
+        for (i = 0; i < count; i++) {
           totalHeuristic += getManhattan(boxes[i]);
         }
 
