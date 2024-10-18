@@ -2,21 +2,21 @@ package solver;
 
 public class SokoState {
     private char itemsData[][];
-    private int cost;
+    // private int cost;
     private int heuristic;
     private char action;
     private SokoState prevState;
 
-    SokoState(char itemsData[][], int cost, int heuristic, char action, SokoState prevState) {
+    SokoState(char itemsData[][], int heuristic, char action, SokoState prevState) {
         this.itemsData = new char[itemsData.length][itemsData[0].length];
         for (int i = 0; i < itemsData.length; i++)
             for (int j = 0; j < itemsData[i].length; j++)
-            this.itemsData[i][j] = itemsData[i][j];
+                this.itemsData[i][j] = itemsData[i][j];
 
-        this.cost = cost;
+        // this.cost = cost;
         this.heuristic = heuristic;
-        this.prevState = prevState;
         this.action = action;
+        this.prevState = prevState;
     }
 
     public char[][] getItemsData() {
@@ -39,9 +39,12 @@ public class SokoState {
         return playerPosition;
     }
 
+    /*
     public int getCost() {
         return cost;
     }
+
+     */
 
     public int getHeuristic() {
         return heuristic;
@@ -53,7 +56,7 @@ public class SokoState {
      * @return
      */
     public int getComparator() {
-        return cost + heuristic;
+        return heuristic;
     }
 
     public char getAction() {
