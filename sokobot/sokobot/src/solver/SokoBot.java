@@ -44,7 +44,7 @@ public class SokoBot {
     public int getManhattan(int[] source) {
         ArrayList<Integer> distances = new ArrayList<>();
         for (int[] goal : this.goalList) {
-          int distance = Math.abs(goal[0] - source[0]) + Math.abs(goal[1] - source[1]);
+          int distance = Math.abs(goal[0] - source[0]) + Math.abs(goal[1] - source[1]); 
           distances.add(distance);
         }
         return Collections.min(distances);
@@ -192,67 +192,103 @@ public class SokoBot {
         1: Player's move sends them to an empty space
         2: Player's move runs into a crate
     */
-    public int checkState(int playerPosition[], char[][] itemsData, char action) {
 
-        int x = playerPosition[0]; // can be confusing since x is associated with the horizontal axis
-        int y = playerPosition[1]; // better labeled row and column, correspondingly
+    
+    
+    public boolean getDeadSpots(char[][] mapData, int i, int j){
+        //top, left, right, bot
+        int[] rows = {1, 0, 0, -1};
+        int[] cols = {0, -1, 1, 0};
+        int top, left, right, bot;
+        if(mapData[i][j] != '.'){
+            //checks
+            top=0;
+            left=0;
+            right=0;
+            bot=0;
+
+            // if including crates: || mapData[i+rows[2]][j+cols[2]] == '$'
+            if(i+1 < this.width && mapData[i+rows[0]][j+cols[0]] == '#' ) bot=1;
+            if(j-1 >=0 && mapData[i+rows[1]][j+cols[1]] == '#' ) left=1;
+            if(j+1 < this.height && mapData[i+rows[2]][j+cols[2]] == '#' ) right=1;
+            if(i-1 >= 0 && mapData[i+rows[3]][j+cols[3]] == '#' ) top=1;
+            
+            if(top+left == 2 || top+right == 2|| bot+left == 2|| bot+right == 2){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    
+    
+    // ORIGINAL checkState
+    public int checkState(int playerPosition[], char[][] itemsData, char action) {
+        int row = playerPosition[0]; // can be confusing since row is associated with the horizontal arowis
+        int col= playerPosition[1]; // better labeled row and column, correspondingly
 
         switch (action) {
             case 'r':
-                if (y >= this.width - 1 || mapData[x][y + 1] == '#') {
+                if (col>= this.width - 1 || mapData[row][col+ 1] == '#') {
                     return INVALID_MOVE;
                 }
-                if (y < this.width - 1 && itemsData[x][y + 1] == ' ') {
+                if (col< this.width - 1 && itemsData[row][col+ 1] == ' ') {
                     moveOne(playerPosition, itemsData, action);
                     return NORMAL_MOVE;
                 }
-                if (y < this.width - 2 && itemsData[x][y + 1] == '$' &&
-                           mapData[x][y + 2] != '#' && itemsData[x][y + 2] != '$') {
+                if (col< this.width - 2 && itemsData[row][col+ 1] == '$' &&
+                           mapData[row][col + 2] != '#' && itemsData[row][col+ 2] != '$' &&
+                           mapData[row][col + 2] != 'X' &&
+                           getDeadSpots(mapData, row, col+2) == false) {
+// HEREEEE
                     moveTwo(playerPosition, itemsData, action);
                     return PUSH_MOVE;
                 }
                 break;
 
             case 'l':
-                if (y <= 0 || mapData[x][y - 1] == '#') {
+                if (col<= 0 || mapData[row][col- 1] == '#') {
                     return INVALID_MOVE;
                 }
-                if (y > 0 && itemsData[x][y - 1] == ' ') {
+                if (col> 0 && itemsData[row][col- 1] == ' ') {
                     moveOne(playerPosition, itemsData, action);
                     return NORMAL_MOVE;
                 }
-                if (y > 1 && itemsData[x][y - 1] == '$' &&
-                           mapData[x][y - 2] != '#' && itemsData[x][y - 2] != '$') {
+                if (col> 1 && itemsData[row][col- 1] == '$' &&
+                           mapData[row][col- 2] != '#' && itemsData[row][col- 2] != '$'&&
+                           getDeadSpots(mapData, row, col-2)== false) {
                     moveTwo(playerPosition, itemsData, action);
                     return PUSH_MOVE;
                 }
                 break;
 
             case 'd':
-                if (x >= this.height - 1 || mapData[x + 1][y] == '#') {
+                if (row >= this.height - 1 || mapData[row + 1][col] == '#') {
                     return INVALID_MOVE;
                 }
-                if (x < height - 1 && itemsData[x + 1][y] == ' ') {
+                if (row < height - 1 && itemsData[row + 1][col] == ' ') {
                     moveOne(playerPosition, itemsData, action);
                     return NORMAL_MOVE;
                 }
-                if (x < height - 2 && itemsData[x + 1][y] == '$' &&
-                           mapData[x + 2][y] != '#' && itemsData[x + 2][y] != '$') {
+                if (row < height - 2 && itemsData[row + 1][col] == '$' &&
+                           mapData[row + 2][col] != '#' && itemsData[row + 2][col] != '$'&&
+                           getDeadSpots(mapData, row+2, col)== false) {
                     moveTwo(playerPosition, itemsData, action);
                     return PUSH_MOVE;
                 }
                 break;
 
             case 'u':
-                if (x <= 0 || mapData[x - 1][y] == '#') {
+                if (row <= 0 || mapData[row - 1][col] == '#') {
                     return INVALID_MOVE;
                 }
-                if (x > 0 && itemsData[x - 1][y] == ' ') {
+                if (row > 0 && itemsData[row - 1][col] == ' ') {
                     moveOne(playerPosition, itemsData, action);
                     return NORMAL_MOVE;
                 }
-                if (x > 1 && itemsData[x - 1][y] == '$' &&
-                           mapData[x - 2][y] != '#' && itemsData[x - 2][y] != '$') {
+                if (row > 1 && itemsData[row - 1][col] == '$' &&
+                           mapData[row - 2][col] != '#' && itemsData[row - 2][col] != '$'&&
+                           getDeadSpots(mapData, row-2, col)== false) {
                     moveTwo(playerPosition, itemsData, action);
                     return PUSH_MOVE;
                 }
@@ -266,7 +302,7 @@ public class SokoBot {
     }
 
     /*
-        Checks whether a SokoState can be added given the current explored states
+        Checks whether a SokoState can be added given the current erowplored states
      */
     public boolean canAddState(SokoState sokoState) {
 
@@ -336,7 +372,7 @@ public class SokoBot {
     public void enqueuePossiblePushes(SokoState sokoState) {
 
         ArrayList<SokoState> possiblePushStates = new ArrayList<SokoState>();
-
+        // 
         for (char action : actions) {
             getPossiblePushStates(possiblePushStates, sokoState, action);
         }
@@ -379,6 +415,9 @@ public class SokoBot {
       return finalMoves.toString();
     }
 
+
+
+    
     /*
         Main method that solves a Sokoban puzzle given its width, height, and data about its states
      */
@@ -398,8 +437,8 @@ public class SokoBot {
 
         while (heuristic > 0 && !pq.isEmpty()) {
             currState = pq.poll();
-            enqueuePossiblePushes(currState);
-            heuristic = getHeuristic(currState.getItemsData());
+            enqueuePossiblePushes(currState); //
+            heuristic = getHeuristic(currState.getItemsData()); //
             // System.out.println("Test! " + "Heuristic: " + heuristic + " | PQueue size: " + pq.size()); // DEBUG
         }
 
