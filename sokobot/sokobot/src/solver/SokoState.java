@@ -2,7 +2,6 @@ package solver;
 
 public class SokoState {
     private char itemsData[][];
-    // private int cost;
     private int heuristic;
     private char action;
     private SokoState prevState;
@@ -12,8 +11,6 @@ public class SokoState {
         for (int i = 0; i < itemsData.length; i++)
             for (int j = 0; j < itemsData[i].length; j++)
                 this.itemsData[i][j] = itemsData[i][j];
-
-        // this.cost = cost;
         this.heuristic = heuristic;
         this.action = action;
         this.prevState = prevState;
@@ -39,13 +36,6 @@ public class SokoState {
         return playerPosition;
     }
 
-    /*
-    public int getCost() {
-        return cost;
-    }
-
-     */
-
     public int getHeuristic() {
         return heuristic;
     }
@@ -53,7 +43,7 @@ public class SokoState {
     /**
      * A* implementation
      * f(n) = g(n) + h(n)
-     * @return
+     * @return an integer comparator value quantifying state priority
      */
     public int getComparator() {
         return heuristic;

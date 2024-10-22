@@ -78,25 +78,6 @@ public class SokoBot {
     }
 
     /*
-        Determines whether row x, column y has an item
-    */
-    public boolean isItem(int x, int y, char[][] itemsData, char[][] mapData) {
-        return itemsData[x][y] == '$' || mapData[x][y] == '#';
-    }
-
-    /*
-        Determines whether a box
-        NOTE: This method is unnecessary, as we can code a general preprocessing method that determines
-              all possible 'dead' positions and not just specific corner cases.
-    */
-    public boolean isBlocked(int x, int y, char[][] itemsData, char[][] mapData) {
-        return (isItem(x, y + 1, itemsData, mapData) && isItem(x + 1, y, itemsData, mapData)) ||
-               (isItem(x, y + 1, itemsData, mapData) && isItem(x - 1, y, itemsData, mapData)) ||
-               (isItem(x, y - 1, itemsData, mapData) && isItem(x + 1, y, itemsData, mapData)) ||
-               (isItem(x, y - 1, itemsData, mapData) && isItem(x - 1, y, itemsData, mapData));
-    }
-
-    /*
         Simulates a valid player move into an empty space
     */
     public void moveOne(int playerPosition[], char[][] itemsData, char action) {
@@ -165,37 +146,9 @@ public class SokoBot {
     }
 
     /*
-        Unnecessary, same comments as isBlocked()
-    */
-    public boolean blockedBox(char[][] itemsData, char[][] mapData) {
-
-        int i, j;
-
-        for (i = 0; i < this.height; i++) {
-          for (j = 0; j < this.width; j++) {
-            if (itemsData[i][j] == '$' && isBlocked(i, j, itemsData, mapData)) {
-              return true;
-            }
-          }
-        }
-
-        return false;
-    }
-
-    /*
-        Checks whether an action can be performed given a game state
-
-        NOTE: You might have to revise check state because it does not return info about the move done.
-
-        For each move type, we have the following possible return values:
-        -1: Player's move sends them out of bounds
-        1: Player's move sends them to an empty space
-        2: Player's move runs into a crate
-    */
-
-    
-    
-    public boolean getDeadSpots(char[][] mapData, int i, int j){
+        Gets the dead spots of a map.
+     */
+    public boolean getDeadSpots(char[][] mapData, int i, int j) {
         //top, left, right, bot
         int[] rows = {1, 0, 0, -1};
         int[] cols = {0, -1, 1, 0};
@@ -220,12 +173,17 @@ public class SokoBot {
         return false;
     }
 
-    
-    
-    // ORIGINAL checkState
+    /*
+        Checks whether an action can be performed given a game state
+
+        For each move type, we have the following possible return values:
+        -1: Player's move sends them out of bounds
+        1: Player's move sends them to an empty space
+        2: Player's move runs into a crate
+    */
     public int checkState(int playerPosition[], char[][] itemsData, char action) {
-        int row = playerPosition[0]; // can be confusing since row is associated with the horizontal arowis
-        int col= playerPosition[1]; // better labeled row and column, correspondingly
+        int row = playerPosition[0];
+        int col= playerPosition[1];
 
         switch (action) {
             case 'r':
@@ -240,7 +198,6 @@ public class SokoBot {
                            mapData[row][col + 2] != '#' && itemsData[row][col+ 2] != '$' &&
                            mapData[row][col + 2] != 'X' &&
                            getDeadSpots(mapData, row, col+2) == false) {
-// HEREEEE
                     moveTwo(playerPosition, itemsData, action);
                     return PUSH_MOVE;
                 }
@@ -294,7 +251,7 @@ public class SokoBot {
                 }
                 break;
 
-            default:
+            default: // An error has occurred
                 System.out.println("Move error!");
         }
 
@@ -302,7 +259,7 @@ public class SokoBot {
     }
 
     /*
-        Checks whether a SokoState can be added given the current erowplored states
+        Checks whether a SokoState can be added given the current explored states
      */
     public boolean canAddState(SokoState sokoState) {
 
@@ -311,9 +268,6 @@ public class SokoBot {
         if (exploredStates.containsKey(stateHash) && exploredStates.get(stateHash) <= sokoState.getComparator()) {
             return false;
         }
-
-        // can also be confusing because method just checks if it can be added but it gets added too
-        // can be transferred to enqueuePossiblePushes()
         return true;
     }
 
@@ -330,8 +284,6 @@ public class SokoBot {
 
     /*
         Gets all possible box pushes from a given state.
-        TODO: Add base case where state has been explored.
-        Status: DONE!! Verify.
      */
     public void getPossiblePushStates(ArrayList<SokoState> possiblePushStates, SokoState sokoState, char action) {
 
@@ -346,7 +298,6 @@ public class SokoBot {
             return;
         }
 
-        // int newCost = sokoState.getCost() + 1;
         int newHeuristic = getHeuristic(tempItemsData);
         SokoState newSokoState = new SokoState(tempItemsData, newHeuristic, action, sokoState);
 
@@ -367,12 +318,11 @@ public class SokoBot {
 
     /*
         Checks all possible actions from a given SokoState and adds to PQueue pq if valid, given HashMap explored
-        Status: DONE!! Verify
      */
     public void enqueuePossiblePushes(SokoState sokoState) {
 
         ArrayList<SokoState> possiblePushStates = new ArrayList<SokoState>();
-        // 
+
         for (char action : actions) {
             getPossiblePushStates(possiblePushStates, sokoState, action);
         }
@@ -414,9 +364,6 @@ public class SokoBot {
 
       return finalMoves.toString();
     }
-
-
-
     
     /*
         Main method that solves a Sokoban puzzle given its width, height, and data about its states
@@ -437,9 +384,8 @@ public class SokoBot {
 
         while (heuristic > 0 && !pq.isEmpty()) {
             currState = pq.poll();
-            enqueuePossiblePushes(currState); //
-            heuristic = getHeuristic(currState.getItemsData()); //
-            // System.out.println("Test! " + "Heuristic: " + heuristic + " | PQueue size: " + pq.size()); // DEBUG
+            enqueuePossiblePushes(currState);
+            heuristic = getHeuristic(currState.getItemsData());
         }
 
         return getPath(finalMoves, currState);
