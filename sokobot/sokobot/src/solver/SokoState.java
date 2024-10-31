@@ -41,7 +41,7 @@ public class SokoState {
     }
 
     /**
-     * A* implementation
+     * GBFS implementation
      * f(n) = h(n)
      * @return an integer comparator value quantifying state priority
      */
